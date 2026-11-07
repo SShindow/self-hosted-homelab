@@ -164,6 +164,42 @@ iperf3 -c <nas-tailscale-ip> -R -t 30
 
 **Check first, next time a "why is this slow remotely" question comes up:** measure the actual path with `iperf3` before trusting a generic speedtest number, and don't treat a single `iperf3` run as the permanent answer — international links are subject to routing and congestion changes outside your control, so re-measure if something that used to work suddenly doesn't (or vice versa).
 
+## 9. Packet loss on one ISP's route — measure from a second network
+
+**What it looked like:** one player in Germany was kicked from the [Minecraft server](game-server-minecraft.md) ~30 seconds after every join, while friends in Belgium and Finland played without a single drop. Server TPS stayed at 20.
+
+**What it actually was:** packet loss on the specific path German consumer ISPs use to reach VNPT — not distance, not the NAS, not Tailscale:
+
+| From | Loss to the NAS | Latency |
+|---|---|---|
+| Telekom home line (PC → `1.1.1.1` locally: 0%) | 6% | ~241 ms |
+| O2 network (phone hotspot) | ~10% | ~250 ms |
+| NAS → same PC (`tailscale ping --until-direct=false --c 30`) | ~7% | ~231 ms |
+| Friend in Finland | 0% | ~266 ms |
+| Same PC, Tailscale routed via a NordVPN data-center server in Frankfurt | 0% | ~234 ms |
+
+Two different German consumer carriers lost packets; a data center 30 km away in the same country didn't. What mattered was whose transit carried the traffic.
+
+**The fix:** route **only the Tailscale daemon** (`tailscaled.exe`) through a VPN server in a data center (NordVPN split tunneling, "enable VPN for selected apps"). `tailscale netcheck` confirms it: the reported public IPv4 changes from the home IP to the VPN's. Everything else on the PC keeps the normal connection. Using the NAS as an exit node does **not** help — the traffic still crosses the same lossy segment to reach it.
+
+**Check first, next time "it only breaks for me":**
+1. `ping -n 60 1.1.1.1` — is the local network clean?
+2. `ping -n 60 <nas-tailscale-ip>` — loss on the path to the NAS?
+3. The same test from a **second network** (a phone hotspot on a different carrier) and from **someone in another country**.
+4. `tailscale status` — direct or `relay "<derp>"`? Exit node in use?
+
+This is also the most likely explanation for the collapsing `iperf3` runs in [§8](#8-a-generic-speedtest-measures-the-wrong-thing-for-cross-country-remote-access): "variable" was really "lossy on this carrier's route on some days".
+
+## 10. Shell gotchas that look like missing files
+
+**`sudo` doesn't expand your wildcard.** `sudo mv /private/dir/*.jar /dest/` → zsh: `no matches found`. The non-root shell expands `*.jar` *before* `sudo` runs, and it can't read a dataset only root can see. Fix: `sudo sh -c 'mv /private/dir/*.jar /dest/'`. Same family as `sudo cat > file`.
+
+**A negative number looks like a flag.** `docker exec <c> rcon-cli worldborder center 288 -320` → `unknown shorthand flag: '3' in -320`. Fix: `rcon-cli -- <command>`.
+
+**`ps aux | grep pattern` finds itself.** When verifying a JVM flag, grep's own command line contains the pattern. Grep on the host side instead: `docker exec <c> ps aux | grep pattern`.
+
+**The `$` in a secret is a compose variable.** CurseForge API keys look like `$2a$10$...`; in compose YAML every `$` must be `$$`, or Docker substitutes empty strings and the key silently breaks.
+
 ## Meta-lessons
 
 - **The same category of bug will recur across every new app you add to a stack, not just once.** `localhost`-vs-container-name alone was hit on at least five separate integrations across this project. Once a pattern like this is recognized, check for it *first* on the next new integration, rather than re-diagnosing from the error text each time.
@@ -172,3 +208,4 @@ iperf3 -c <nas-tailscale-ip> -R -t 30
 - **"Vague error from an external-facing container" is a DNS suspect before it's a code or config suspect**, specifically on infrastructure sitting behind an ISP known to interfere with resolution.
 - **A metric that completes without error isn't automatically the whole answer** — a resilver reporting "0 errors" and a scrub afterward finding new checksum errors on the same disk are both true at once; the full picture needed both.
 - **A single measurement of a real-world network path is a snapshot, not a constant.** The same `iperf3` command between the same two endpoints returned ~3.78 Mbps and, three weeks later, ~22.6 Mbps — treat "I measured X" as "X was true when I measured it," not as a permanent fact to design around.
+- **"It only breaks for one person" is a routing clue before it's a server clue.** Testing from a second network and comparing with someone in another country isolated an ISP-path problem that no amount of server tuning would have fixed.

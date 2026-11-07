@@ -8,6 +8,18 @@ All notable changes to this project are documented here, in the order they were 
 - Lidarr paused mid-build — resume points tracked in [Media Automation](docs/arr-stack.md#extension-lidarr-music--paused-curated-artist-scope)
 - Re-measurement of the Vietnam↔Germany throughput ceiling outstanding — figures taken during the Immich build are 5–10× higher than the number currently documented, which several decisions depend on
 - Re-test outstanding on whether the arr-stack's per-container `dns:` overrides actually function, given the ISP appears to block port 53 to third-party resolvers
+- Minecraft server runs in offline mode with no whitelist; Tailscale ACLs for shared users not yet set
+
+## 2026 — Game server: Minecraft ("Cozy Valley")
+- Hosted a modded Minecraft server for friends in Germany, Belgium, Finland and Vietnam — Tailscale node sharing only, no port forwarding; Palworld rejected first on hardware grounds (4-core / 16 GB+ minimum)
+- Deployed knowingly while the pool is `DEGRADED`; hourly 3-day snapshots on the world dataset
+- Hit `SIGILL` on the Java 25 image: the Pentium G3240 has no AVX/AVX2. Three JVM-flag workarounds failed; pinned `java21`/`java17` tags instead. Minecraft 26.x is blocked on this CPU until the i7-4790 upgrade
+- Went through three builds: Paper 1.21.10 (deleted), Society: Sunlit Valley (~300 mods — one player already used 117% CPU and ~6 GiB, so deleted), then a hand-picked Forge 1.20.1 pack at ~10% of that size
+- Rebalanced memory box-wide: capped the ZFS ARC at 3 GiB (Post-Init `zfs_arc_max`), added container `mem_limit`s, and found qBittorrent holding ~3.3 GiB of seeding cache
+- Got rate-limited by the CurseForge API through restart loops (placeholder key, `moonlight` vs. its real slug `selene`); removed the API from the server entirely — mods are now copied from the client profile over SMB
+- Root-caused the owner's disconnects to **6–10% packet loss on German consumer ISPs' route to VNPT** (Telekom and O2), while a Finland route and a Frankfurt data-center route lost nothing; fixed by split-tunnelling only `tailscaled.exe` through a data-center VPN server, plus Connectivity's disconnect timeout raised to 120 s. Likely also explains the earlier "variable" `iperf3` results
+- Offline mode accepted for a TLauncher player; restored skins server-side with SkinRestorer; WorldEdit added op-only
+- Pre-generated all four dimensions with Chunky (Overworld 1,500 blocks: ~35.7k chunks in ~25 min); idle tick dropped to 3.6 ms. Five players tested across official and TLauncher clients
 
 ## 2026 — Self-hosted photo management (Immich)
 - Replaced a full, paid 50 GB consumer cloud photo tier with a self-hosted Immich instance — four containers from the TrueNAS community catalogue (server, PostgreSQL 18 + vector, Redis, ML), on host-path datasets rather than the ixVolume default

@@ -40,12 +40,13 @@ This is a living project — new capabilities are added and documented increment
 | Media Streaming | Jellyfin (library on ZFS, read-only mount, no transcoding in normal use) |
 | Media Automation | Prowlarr → Sonarr/Radarr/Lidarr → download client → Bazarr → Seerr, request-to-playback pipeline for TV/movies/music |
 | Friend Access | Wizarr (self-service Jellyfin invites) + Cleanuparr (stalled-download cleanup) |
+| Game Server | Minecraft — Forge 1.20.1 modpack on `itzg/minecraft-server`, reachable only over Tailscale node sharing |
 
 See [`docs/architecture.svg`](docs/architecture.svg) for the full diagram.
 
 ## Hardware
 
-- CPU: Intel Pentium G3240 (2 cores/2 threads) — **upgrade to an Intel Core i7-4790 (non-K) planned** for the next on-site visit: same LGA1150 socket, drop-in on the existing board, no BIOS update needed (see [Key Challenges & Fixes](#key-challenges--fixes)); not yet installed
+- CPU: Intel Pentium G3240 (2 cores/2 threads) — **upgrade to an Intel Core i7-4790 (non-K) planned** for the next on-site visit: same LGA1150 socket, drop-in on the existing board, no BIOS update needed (see [Key Challenges & Fixes](#key-challenges--fixes)); not yet installed. The G3240 has **no AVX/AVX2**, which rules out Java 25-based container images (see [Game Server](docs/game-server-minecraft.md#the-cpu-has-no-avx--java-25-dies-with-sigill))
 - RAM: 16GB DDR3
 - Motherboard: ASUS H81M-D (BIOS v2106)
 - Storage: 2x 2TB HDD (mirrored ZFS pool — at least one confirmed a WD Green WD20EZRX, not Seagate as originally recorded here; see [Troubleshooting](docs/troubleshooting.md#7-storage-diagnosing-a-faulted-disk-without-touching-hardware)), 128GB Kingston SSD (boot/OS)
@@ -86,6 +87,7 @@ Each module is a self-contained build with its own goals, decisions, problems hi
 | **[Media Automation (arr-stack)](docs/arr-stack.md)** | Seerr → Prowlarr → Sonarr/Radarr/Lidarr → download client → Bazarr request-to-playback pipeline, plus Wizarr/Cleanuparr for friend access. See the module's own disclaimer. | ✅ Operational (Lidarr paused) |
 | **[Dashboard (Homepage)](docs/homepage.md)** | One YAML-configured page reaching every service on the box, with live widgets, working identically from the LAN or from Germany. | ✅ Operational |
 | **[Photo Management](docs/photos-immich.md)** | Immich replacing a paid 50 GB cloud photo tier — mobile auto-backup, a library that stays readable without the app, and a checksum-verified off-site copy. | ✅ Operational |
+| **[Game Server (Minecraft)](docs/game-server-minecraft.md)** | A modded Forge 1.20.1 server for friends in four countries, sized to a 2-core CPU without AVX — three builds, a memory rebalance, and an ISP-route finding to get there. | ✅ Operational |
 
 **[Troubleshooting Playbook](docs/troubleshooting.md)** — recurring problem patterns collected across every module above (container networking, ISP DNS interference, storage diagnostics, and more), grouped by root cause rather than by which module happened to surface each one first.
 
@@ -122,6 +124,10 @@ Each module is a self-contained build with its own goals, decisions, problems hi
 | Wizarr's Jellyfin library scan found nothing at the same LAN IP that works for Seerr's identical integration | Wizarr's container apparently resolves cross-network reachability differently than Seerr's | Used the NAS's own Tailscale IP instead — confirmed empirically, root cause not fully pinned down |
 | Wizarr's "Test & Add" step 404'd even though the library scan against the same URL had just succeeded | A trailing slash in the URL field, likely producing a double-slash request path on a different internal endpoint | Removed the trailing slash |
 | A CRITICAL ZFS pool alert (`sda` FAULTED) sat unnoticed for 4 days; `smartctl` then failed outright with `INQUIRY failed` | `dmesg` showed `hostbyte=DID_BAD_TARGET` — the SATA controller couldn't address the drive at all, a bus/connection-level fault rather than confirmed media failure | A full reboot re-initialized the controller; the disk rejoined and resilvered clean. A later scrub found new checksum errors on the same disk, escalating it from "probably a cable" to "plan a replacement" — see [Troubleshooting](docs/troubleshooting.md#7-storage-diagnosing-a-faulted-disk-without-touching-hardware) |
+| Java 25 Minecraft image crash-looped with `SIGILL` (illegal instruction) | The Pentium G3240 has no AVX/AVX2; the image's pre-built code assumes it. `-Xshare:off`, `-XX:AOTMode=off`, `-XX:UseAVX=0` didn't help | Pinned `java21` / `java17` image tags; Minecraft 26.x (Java 25) waits for the i7-4790 — see [Game Server](docs/game-server-minecraft.md) |
+| One player kicked from the game server ~30 s after every join while friends abroad played fine | 6–10% packet loss on the path German consumer ISPs (Telekom, O2) use to reach VNPT; a Finland route and a Frankfurt data-center route lost nothing | Split-tunnelled only `tailscaled.exe` through a data-center VPN server, plus a longer disconnect timeout — see [Troubleshooting](docs/troubleshooting.md#9-packet-loss-on-one-isps-route--measure-from-a-second-network) |
+| Modded server locked out by the CurseForge API (`403`, rate-limited) | Restart loops × ~30 mod lookups per start (placeholder key, a renamed library slug) | Removed the API from the server: mods copied from the client profile over SMB |
+| `free` showed ~1.6 GiB available on a 16 GB box with no swap | ZFS ARC allowed to grow to 14.5 GiB; qBittorrent holding ~3.3 GiB of seeding cache | Capped the ARC at 3 GiB via a Post-Init `zfs_arc_max` command; container `mem_limit`s |
 
 ## Results
 
@@ -137,6 +143,7 @@ Each module is a self-contained build with its own goals, decisions, problems hi
 - A full request-to-playback automation pipeline (Seerr → Prowlarr → Sonarr/Radarr → download client → Bazarr) is deployed and confirmed working end to end with a real movie request, with multiple redundant sources configured so no single source's downtime blocks the pipeline. See [Media Automation](docs/arr-stack.md) for this module's disclaimer.
 - Jellyfin access for friends is now a self-service invite link (Wizarr) rather than a manually-created account and a password relayed over chat, confirmed end to end with a real invite → account creation → playback test — set up ahead of a planned expansion to ~10 friends across three countries.
 - The home LAN is reachable from abroad via a Tailscale subnet router — the router's own admin page included — without exposing anything to the internet, confirmed from a real Germany connection (not just a same-country stand-in).
+- A modded Minecraft server (Forge 1.20.1, 35 mods) hosts friends in four countries over Tailscale only — five players tested across two launcher types, all four dimensions pre-generated, idling at a 3.6 ms tick on a 2-core CPU (see [Game Server](docs/game-server-minecraft.md)).
 
 ## Lessons Learned
 
@@ -171,6 +178,8 @@ Each module is a self-contained build with its own goals, decisions, problems hi
 - A working fix from one integration doesn't automatically generalize to the next one solving the same-shaped problem — Wizarr needing the Tailscale IP where Seerr needed the LAN IP for the identical "reach Jellyfin from another Docker network" problem is the clearest example. Verify empirically rather than assuming a prior fix transfers.
 - A UI's status badge is not ground truth. A Custom App stuck "Deploying" with no further detail was resolved in minutes once the investigation moved to `docker ps -a` / `docker logs` / `docker top` instead of waiting on the dashboard.
 - A process completing "with 0 errors" answers a narrower question than it sounds like. A ZFS resilver reporting zero errors only proves the blocks it touched were fine; a full scrub afterward found new checksum errors on the same disk that the resilver's clean result had nothing to say about.
+- Check the CPU's instruction set before trusting a container's `latest` tag. A 10-year-old CPU without AVX turned a current Java runtime into an instant `SIGILL`; `/proc/cpuinfo` answered in one line what three JVM flags couldn't.
+- "It only breaks for one person" is a routing clue before it's a server clue. The same Germany→Vietnam disconnect reproduced on two consumer carriers and vanished through a data center in the same city — distance was never the variable, transit was.
 
 ## Future Improvements
 
@@ -217,7 +226,12 @@ Each module is a self-contained build with its own goals, decisions, problems hi
 - [ ] Tdarr (unified transcode format) — evaluated and declined for now, no HEVC-capable hardware in this NAS
 - [ ] CPU upgrade (Intel Core i7-4790, non-K) — planned for the next on-site visit, drop-in on the existing board
 - [ ] **Replace both ZFS mirror disks (WD Green → WD Red Plus, 4TB) — active, not a precaution.** The disk that faulted has now faulted a third time (pool currently `DEGRADED`, running with zero redundancy) and the mirror's other disk shows independent wear-pattern evidence of the same non-NAS-rated drive family aging badly; see [Troubleshooting](docs/troubleshooting.md#7-storage-diagnosing-a-faulted-disk-without-touching-hardware)
+- [x] ~~Game server for friends~~ → done, see [Game Server (Minecraft)](docs/game-server-minecraft.md)
+- [ ] Minecraft: whitelist or login mod (offline mode currently lets anyone on the share join as anyone)
+- [ ] Tailscale ACLs limiting shared users to the ports they need (currently every port on the NAS)
+- [ ] Cap qBittorrent's memory (~1 GB `mem_limit`) so seeding can't squeeze other services
+- [ ] Permanent fix for the lossy German-ISP→VNPT route (data-center relay/exit VPS) instead of a client-side VPN
 
 ---
 
-**Stack:** TrueNAS CE · ZFS · Tailscale (WireGuard mesh + exit node + subnet router) · SMB/Samba · rclone (Cloud Sync) · Prometheus + Grafana + node_exporter · Jellyfin · Immich (PostgreSQL + Redis) · Prowlarr · Sonarr · Radarr · Lidarr · Bazarr · a download client · Seerr · Wizarr · Cleanuparr · Homepage
+**Stack:** TrueNAS CE · ZFS · Tailscale (WireGuard mesh + exit node + subnet router) · SMB/Samba · rclone (Cloud Sync) · Prometheus + Grafana + node_exporter · Jellyfin · Immich (PostgreSQL + Redis) · Prowlarr · Sonarr · Radarr · Lidarr · Bazarr · a download client · Seerr · Wizarr · Cleanuparr · Homepage · Minecraft (Forge, itzg/minecraft-server)
