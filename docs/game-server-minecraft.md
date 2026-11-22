@@ -237,9 +237,15 @@ The second player added only ~2.5 ms. Most of the tick cost on a fresh world was
 | Nether | 500 | 0, 0 | 29 | minutes; netherrack compresses well |
 | Twilight Forest | 750 | spawn | 44 | |
 | End | 1,500 | 0, 0 | 33 | main island + the first ring of Nullscape terrain |
+| Overworld, extension (Nov 2026) | 1,500 → 1,700 | spawn (288, −320) | — | 46,225 chunks checked in **11 min 57 s** (avg ~65 chunks/s); existing chunks pass at 500–800/s, new terrain at ~55–60/s |
 
-<!-- ![Chunky progress during the Overworld run](img/minecraft-chunky-progress.png) -->
-<!-- ![Grafana — CPU/load during pre-generation](img/minecraft-pregen-grafana.png) -->
+![Chunky progress during the Overworld extension run](img/minecraft-chunky-progress.png)
+
+*The 1,700 extension run. Chunky works region by region, so already-generated and new chunks are mixed: ~56–62 chunks/s while generating new terrain, then 170–440 chunks/s once it reaches existing chunks. The 51-second stall (01:04:32 → 01:05:23) is most likely an autosave or GC pause while new chunks are written — exactly the kind of lag spike players would feel if they were online.*
+
+![Grafana — CPU/load during pre-generation](img/minecraft-pregen-grafana.png)
+
+*Node Exporter during the same run (LAN IP redacted). CPU goes from ~20% idle to 65–85% from 18:58, with a visible iowait share while chunks are written to the pool; system load sits at ~142% of the 2 cores. RAM stays flat (mostly ZFS cache) and nothing swaps. Captured with Prometheus on port 30104 — start Prometheus/Grafana before a run, they're normally stopped to save resources.*
 
 **After pre-generation, idle:** TPS 20, mean tick **3.6 ms** (budget 50 ms), load average ~1.6.
 
