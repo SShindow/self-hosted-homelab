@@ -221,10 +221,13 @@ This finding very likely also explains the August `iperf3` collapse and the Jell
 | Sunlit Valley (~300 mods) | 1 | 20 | 8.5 | 117 | 5.2–6.0 |
 | Cozy Valley (34 mods), fresh world | 1 | 20 | 18.3 | 45 | 3.63 |
 | Cozy Valley, fresh world | 2 (official + TLauncher) | 20 | 20.8 | 79.7 | 3.64 |
+| Cozy Valley, pre-generated, weeks of play (Nov 2026) | 2 | 20 | 26.0 | 51 | 4.3 |
 
 The second player added only ~2.5 ms. Most of the tick cost on a fresh world was **terrain generation**, not players — which is what pre-generation removes.
 
-<!-- ![forge tps and docker stats with two players online](img/minecraft-two-player-stats.png) -->
+![forge tps and docker stats with two players online](img/minecraft-two-player-stats.png)
+
+*Two players on the established world (player names redacted). TPS holds at 20 with ~26 ms of the 50 ms tick budget used. The tick is higher than the fresh-world test because the world now has builds, farms and more loaded entities — but CPU is lower (51% vs 79.7%) since no new terrain is being generated.*
 
 **Pre-generation with Chunky** (run while nobody was online):
 
