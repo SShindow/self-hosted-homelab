@@ -8,7 +8,9 @@
 
 The end result is a modded Forge 1.20.1 server ("Cozy Valley", 35 mods) that four friends plus the owner have played on without issues, after going through three different server builds and two network investigations to get there.
 
-<!-- ![Minecraft server list — Cozy Valley over Tailscale](img/minecraft-server-list.png) -->
+![Minecraft server list — Cozy Valley over Tailscale](img/minecraft-server-list.png)
+
+*Seen from a TLauncher client. The red ✗ only means the client carries extra client-only mods (minimap, shaders) that the server doesn't run — joining works normally.*
 
 **Deployed while the pool is `DEGRADED`.** The [ZFS disk fault](troubleshooting.md#7-storage-diagnosing-a-faulted-disk-without-touching-hardware) means `tank` is currently running on one disk. Adding a new service under those conditions was a conscious decision: the server's write load is small, it doesn't make the disk situation worse, and the world is protected against everything *except* the last disk failing (see [Still open](#still-open)).
 
@@ -120,7 +122,7 @@ One friend plays through TLauncher, which has no Microsoft-account authenticatio
 # v  ~AdapterBlob 0x00007f20e2707f00
 ```
 
-<!-- ![SIGILL crash in the container log](img/minecraft-sigill-crash.png) -->
+![CPU flags on the NAS: SSE4.2 only, no AVX/AVX2, on a Pentium G3240](img/minecraft-sigill-crash.png)
 
 **What it actually was:** `SIGILL` is an *illegal instruction*. The Pentium G3240 has no AVX/AVX2 at all:
 
