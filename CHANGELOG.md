@@ -6,7 +6,7 @@ All notable changes to this project are documented here, in the order they were 
 - Germany node: rack assembly and switch replacement (parts ordered); Uptime Kuma; Home Assistant migration; cross-site backups
 - Architecture diagram still shows the Vietnam site only
 - CPU upgrade to an Intel Core i7-4790 (non-K) planned for the next on-site visit; not yet installed
-- **Active:** replacing both ZFS mirror disks (WD Green → WD Red Plus, 4TB) after a third fault on the same disk left the pool running `DEGRADED` with zero redundancy (see the [ZFS pool disk fault](docs/troubleshooting.md#7-storage-diagnosing-a-faulted-disk-without-touching-hardware) entry below)
+- **Active:** replacing both ZFS mirror disks (WD Green → WD Red Plus, 2TB — originally planned as 4TB) after a third fault on the same disk left the pool running `DEGRADED` with zero redundancy (see the [ZFS pool disk fault](docs/troubleshooting.md#7-storage-diagnosing-a-faulted-disk-without-touching-hardware) entry below)
 - Lidarr paused mid-build — resume points tracked in [Media Automation](docs/arr-stack.md#extension-lidarr-music--paused-curated-artist-scope)
 - Re-measurement of the Vietnam↔Germany throughput ceiling outstanding — figures taken during the Immich build are 5–10× higher than the number currently documented, which several decisions depend on
 - Re-test outstanding on whether the arr-stack's per-container `dns:` overrides actually function, given the ISP appears to block port 53 to third-party resolvers

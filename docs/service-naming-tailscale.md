@@ -119,7 +119,7 @@ Every command prints *"approval from an admin is required"* — that message is 
 ![All services online](img/tailscale-services-list.png)
 *Every served service reports one healthy host; `cloud` is defined but not served yet. Tailnet name redacted.*
 
-**Kept on the node address on purpose:** Wizarr (invite links are built from whatever address you open it on, and friends can't reach Services), Minecraft (not HTTP), Prometheus (no login; Grafana is the front end). **Pending:** Nextcloud (`cloud`, needs `trusted_domains` + `overwriteprotocol`), Lidarr (paused), Grafana (stopped), and the Germany node's Vaultwarden / Uptime Kuma / Home Assistant.
+**Kept on the node address on purpose:** Wizarr (invite links are built from whatever address you open it on, and friends can't reach Services), Minecraft (not HTTP), Prometheus (no login; Grafana is the front end). **Pending:** Nextcloud (`cloud`, needs `trusted_domains` + `overwriteprotocol`), Lidarr (paused), Grafana, and the Germany node's Vaultwarden / Uptime Kuma / Home Assistant.
 
 Service names were chosen knowing they appear in public certificate-transparency logs — hence `dl` rather than the download client's name, and `nasvn` rather than anything identifying.
 

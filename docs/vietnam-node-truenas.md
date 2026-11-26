@@ -220,7 +220,7 @@ Each module is a self-contained build with its own goals, decisions, problems hi
 - [ ] Lidarr (music automation) — deployed and configured, paused before its end-to-end test; see [Media Automation](arr-stack.md)
 - [ ] Tdarr (unified transcode format) — evaluated and declined for now, no HEVC-capable hardware in this NAS
 - [ ] CPU upgrade (Intel Core i7-4790, non-K) — planned for the next on-site visit, drop-in on the existing board
-- [ ] **Replace both ZFS mirror disks (WD Green → WD Red Plus, 4TB) — active, not a precaution.** The disk that faulted has now faulted a third time (pool currently `DEGRADED`, running with zero redundancy) and the mirror's other disk shows independent wear-pattern evidence of the same non-NAS-rated drive family aging badly; see [Troubleshooting](troubleshooting.md#7-storage-diagnosing-a-faulted-disk-without-touching-hardware)
+- [ ] **Replace both ZFS mirror disks (WD Green → WD Red Plus, 2TB) — active, not a precaution.** The disk that faulted has now faulted a third time (pool currently `DEGRADED`, running with zero redundancy) and the mirror's other disk shows independent wear-pattern evidence of the same non-NAS-rated drive family aging badly; see [Troubleshooting](troubleshooting.md#7-storage-diagnosing-a-faulted-disk-without-touching-hardware)
 - [x] ~~Game server for friends~~ → done, see [Game Server (Minecraft)](game-server-minecraft.md)
 - [ ] Minecraft: whitelist or login mod (offline mode currently lets anyone on the share join as anyone)
 - [ ] Tailscale ACLs limiting shared users to the ports they need (currently every port on the NAS)
