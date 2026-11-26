@@ -60,6 +60,7 @@ Each module is a self-contained build with its own goals, decisions, problems hi
 |---|---|
 | Tailscale mesh, exit node and subnet router | [Tailscale Exit Node](docs/tailscale-exit-node.md) |
 | Germany → Vietnam route quality: Telekom and O2 lose 6–10 %, Vodafone 0 % | [Game Server](docs/game-server-minecraft.md), [Germany Node](docs/germany-node-proxmox.md#cross-site-link-test-vodafone--vnpt) |
+| Service names: `https://<service>.<tailnet>.ts.net` for every web UI via Tailscale Services, no domain, no open ports | [Service Naming](docs/service-naming-tailscale.md) |
 | Key expiry and tagging for headless nodes | [Germany Node](docs/germany-node-proxmox.md#remote-access-tailscale-on-the-host) |
 
 **[Troubleshooting Playbook](docs/troubleshooting.md)**: recurring problem patterns collected across every module, grouped by root cause rather than by which module happened to surface each one first.
@@ -72,6 +73,7 @@ Each module is a self-contained build with its own goals, decisions, problems hi
 - **A full media request-to-playback pipeline** (Seerr → Prowlarr → Sonarr/Radarr → download client → Bazarr → Jellyfin), confirmed end to end, with self-service invites for friends.
 - **A modded game server for friends in four countries**, sized to a 2-core CPU without AVX. A player's disconnects were traced to one ISP's international route.
 - **A second site brought up from a €133 used mini PC.** Validated before use, behind 2FA, reachable from anywhere, and measured at 0 % loss to the NAS over a different German ISP.
+- **Every web UI on a memorable HTTPS name, for free.** Eleven services moved from `IP:port` to Tailscale Services names with automatic certificates. Tagging a node that carried 8 friend shares was a documented unknown; it was prepared for, tested with a real friend, and survived.
 - **A module retired on evidence.** The camera NVR was decommissioned after measuring its real cost, which funded the photo library.
 
 ## Lessons Learned

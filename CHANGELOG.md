@@ -11,6 +11,19 @@ All notable changes to this project are documented here, in the order they were 
 - Re-measurement of the Vietnam↔Germany throughput ceiling outstanding — figures taken during the Immich build are 5–10× higher than the number currently documented, which several decisions depend on
 - Re-test outstanding on whether the arr-stack's per-container `dns:` overrides actually function, given the ISP appears to block port 53 to third-party resolvers
 - Minecraft server runs in offline mode with no whitelist; Tailscale ACLs for shared users not yet set
+- Service names pending for Nextcloud (`trusted_domains`/`overwriteprotocol`), Lidarr and Grafana; Germany node services (Vaultwarden, Uptime Kuma, Home Assistant) to use the same scheme
+
+## 2026 — Service naming: Tailscale Services
+- Replaced `http://<tailscale-ip>:<port>` with `https://<service>.<tailnet>.ts.net` for 11 services (Jellyfin, Immich, Seerr, Sonarr, Radarr, Prowlarr, Bazarr, Cleanuparr, Homepage, download client, TrueNAS UI) — see [Service Naming](docs/service-naming-tailscale.md)
+- Compared host `serve`, Tailscale Services and an own domain + reverse proxy; chose Tailscale Services on cost (free) and host-independence, recording the binding to the tailnet name as an accepted risk. Decided before Vaultwarden, whose URL and passkeys can't easily change later
+- Picked a generated tailnet name before enabling HTTPS, since the first certificate binds it to the account
+- Added `tag:server` and auto-approvers for services, the subnet route and the exit node
+- **Tagged the NAS despite 8 active node shares** after the docs proved inconsistent on whether shares survive; shares, subnet router and exit node all kept working, confirmed by a friend joining the game server
+- Verified certificates (Let's Encrypt, 90-day auto-renew) and that the serve config survives a Tailscale app restart
+- Homepage: added the new host to `HOMEPAGE_ALLOWED_HOSTS` and rewrote tile links to the new names, leaving widget URLs internal
+- Found the proxy delivers every request from `127.0.0.1`: Bazarr turned out to have no authentication and got Forms auth; the download client's localhost bypass was disabled and its brute-force ban lowered from 9999 to 5 attempts before serving
+- Kept Wizarr, Minecraft and Prometheus on node addresses on purpose; Nextcloud, Lidarr and Grafana pending
+- Playbook: new [§11](docs/troubleshooting.md#11-a-reverse-proxy-on-localhost-turns-local-auth-bypasses-into-real-ones) and three zsh gotchas added to §10
 
 ## 2026 — Second site: Germany node (Proxmox VE)
 - Repository renamed from `homelab-nas` to `self-hosted-homelab` now that it covers two sites

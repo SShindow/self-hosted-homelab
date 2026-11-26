@@ -200,6 +200,20 @@ This is also the most likely explanation for the collapsing `iperf3` runs in [§
 
 **The `$` in a secret is a compose variable.** CurseForge API keys look like `$2a$10$...`; in compose YAML every `$` must be `$$`, or Docker substitutes empty strings and the key silently breaks.
 
+**zsh doesn't word-split a variable.** `TS="sudo docker exec … tailscale serve --https=443"` then `$TS --service=…` → `zsh: command not found: sudo docker exec …`. Unlike bash, zsh passes `$TS` as one word, so it looks for a single command with that whole string as its name. Fix: a function — `ts() { sudo docker exec … "$@"; }`.
+
+**A placeholder in angle brackets is a redirection.** Pasting `docker inspect <container-name> …` literally → `zsh: no such file or directory: container-name`. The shell read `<` as input redirection before the command ever ran.
+
+**A `sudo` password prompt can swallow pasted lines.** Pasting a multi-line block that starts with `sudo` can feed the following lines into the password prompt, so they silently never run. Run `sudo -v` first, then paste.
+
+## 11. A reverse proxy on localhost turns "local" auth bypasses into real ones
+
+**What it looked like:** after giving every service a Tailscale Services name, Bazarr opened straight into its UI in a private window — no login.
+
+**What it actually was:** `tailscale serve` forwards to `127.0.0.1`, so every request reaches the app *from localhost*, whoever sent it. Bazarr had never had authentication configured at all (low-risk behind an IP:port nobody else used); the download client had *Bypass authentication for clients on localhost* available, which would have opened it to the whole tailnet the moment it was proxied. See [Service Naming](service-naming-tailscale.md#finding-a-proxy-on-localhost-turns-local-auth-bypasses-into-real-ones).
+
+**Check first next time:** before putting *any* proxy in front of an app, look for "local network / localhost / whitelisted subnet" auth bypasses and host-name allow-lists, then verify the login in a private window after serving.
+
 ## Meta-lessons
 
 - **The same category of bug will recur across every new app you add to a stack, not just once.** `localhost`-vs-container-name alone was hit on at least five separate integrations across this project. Once a pattern like this is recognized, check for it *first* on the next new integration, rather than re-diagnosing from the error text each time.
@@ -209,3 +223,4 @@ This is also the most likely explanation for the collapsing `iperf3` runs in [§
 - **A metric that completes without error isn't automatically the whole answer** — a resilver reporting "0 errors" and a scrub afterward finding new checksum errors on the same disk are both true at once; the full picture needed both.
 - **A single measurement of a real-world network path is a snapshot, not a constant.** The same `iperf3` command between the same two endpoints returned ~3.78 Mbps and, three weeks later, ~22.6 Mbps — treat "I measured X" as "X was true when I measured it," not as a permanent fact to design around.
 - **"It only breaks for one person" is a routing clue before it's a server clue.** Testing from a second network and comparing with someone in another country isolated an ISP-path problem that no amount of server tuning would have fixed.
+- **Adding a proxy changes who the app thinks is calling.** Any trust an app grants to "local" requests extends to everyone the proxy serves.
