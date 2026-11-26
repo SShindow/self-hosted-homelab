@@ -14,6 +14,7 @@ All notable changes to this project are documented here, in the order they were 
 
 ## 2026 — Second site: Germany node (Proxmox VE)
 - Repository renamed from `homelab-nas` to `self-hosted-homelab` now that it covers two sites
+- Restructured the docs around the two sites: the README is now a short two-site overview, and the NAS-specific sections (overview, hardware, setup, challenges, results, lessons, roadmap) moved word for word to a new [Vietnam Node](docs/vietnam-node-truenas.md) page
 - Added a Proxmox VE 9.3 node in Darmstadt: a used Dell OptiPlex 5060 Micro (i5-8500T, 16 GB), bought for €132.69 against a requirement list of ≤ 25 W idle, under €300 and 8th gen+. Rack and TL-SG108E managed switch ordered, assembly pending
 - Validated before installing anything: CrystalDiskInfo Good with 3,958 GB written and 0 reallocated/uncorrectable/CRC errors, two alarming-looking values explained as Micron/counter quirks, and one MemTest86+ pass with 0 errors (one stick came from a spare-parts box with no anti-static protection)
 - Chose ext4/LVM-thin over ZFS on the single SSD; ZFS replication from the NAS will go to a dedicated backup disk later

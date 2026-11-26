@@ -80,7 +80,7 @@ Each entry follows the same shape: what it looked like, what it actually was, an
 
 ## 7. Storage: diagnosing a "faulted" disk without touching hardware
 
-This project's NAS is administered entirely remotely (see the [README](../README.md#hardware)'s deployment note) — a real disk fault had to be diagnosed and worked through with zero physical access, using only the TrueNAS shell.
+This project's NAS is administered entirely remotely (see the deployment note on the [Vietnam Node page](vietnam-node-truenas.md#hardware)) — a real disk fault had to be diagnosed and worked through with zero physical access, using only the TrueNAS shell.
 
 **Step 1 — find which disk, and what kind of error.** The Storage Dashboard's top-level VDEV card only shows a pool-wide summary; drilling into **View VDEVs** shows each physical disk's individual status and error counts. `zpool status -v <pool>` gives the same information from the shell, plus the pool's own recommended action.
 
