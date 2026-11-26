@@ -60,8 +60,16 @@ Each module is a self-contained build with its own goals, decisions, problems hi
 |---|---|
 | Tailscale mesh, exit node and subnet router | [Tailscale Exit Node](docs/tailscale-exit-node.md) |
 | Germany → Vietnam route quality: Telekom and O2 lose 6–10 %, Vodafone 0 % | [Game Server](docs/game-server-minecraft.md), [Germany Node](docs/germany-node-proxmox.md#cross-site-link-test-vodafone--vnpt) |
-| Service names: `https://<service>.<tailnet>.ts.net` for every web UI via Tailscale Services, no domain, no open ports | [Service Naming](docs/service-naming-tailscale.md) |
 | Key expiry and tagging for headless nodes | [Germany Node](docs/germany-node-proxmox.md#remote-access-tailscale-on-the-host) |
+
+### Quality of life
+
+Work that belongs to neither node: it changes how the whole homelab is *used* day to day rather than what it can do.
+
+| Module | What it does | Status |
+|---|---|---|
+| **[Service Naming](docs/service-naming-tailscale.md)** | Every web UI moved from `http://<ip>:<port>` to `https://<service>.<tailnet>.ts.net` with automatic certificates, via Tailscale Services — free, no domain, no open ports, and names that follow a service if it moves between sites. Includes tagging a node with 8 friend shares and closing the auth bypasses a localhost proxy creates. | ✅ Operational (11 services; Nextcloud, Lidarr, Grafana pending) |
+| UI customization | Consistent theming and layout across service web UIs, building on the new names. | ⏳ Next |
 
 **[Troubleshooting Playbook](docs/troubleshooting.md)**: recurring problem patterns collected across every module, grouped by root cause rather than by which module happened to surface each one first.
 
@@ -96,6 +104,8 @@ The ten that apply across the whole homelab. The rest are on each node's page.
 **Vietnam node:** replace both ZFS mirror disks (WD Green → WD Red Plus, active) · CPU upgrade to an i7-4790 · Prometheus alert rules · a whitelist or login mod for the game server. Full list on the [node page](docs/vietnam-node-truenas.md#future-improvements).
 
 **Germany node:** assemble the rack and swap in the TL-SG108E · Uptime Kuma · Home Assistant migration · a 2.5" SSD backup target · a second Tapo C200. Full list on the [node page](docs/germany-node-proxmox.md#status-and-next-steps).
+
+**Quality of life:** service names for Nextcloud, Lidarr and Grafana, then the Germany node's services on the same scheme · UI customization across services.
 
 **Cross-site:** scheduled backups in both directions · Tailscale ACLs limiting shared users to the ports they need · self-hosted DNS (AdGuard Home / Pi-hole) as the tailnet resolver · re-test the Vodafone route at different times · a combined two-site architecture diagram.
 
