@@ -3,12 +3,25 @@
 All notable changes to this project are documented here, in the order they were built. This project is developed and documented incrementally — each entry reflects a real, completed milestone rather than a planned roadmap.
 
 ## [Unreleased]
+- Germany node: rack assembly and switch replacement (parts ordered); Uptime Kuma; Home Assistant migration; cross-site backups
+- Architecture diagram still shows the Vietnam site only
 - CPU upgrade to an Intel Core i7-4790 (non-K) planned for the next on-site visit; not yet installed
 - **Active:** replacing both ZFS mirror disks (WD Green → WD Red Plus, 4TB) after a third fault on the same disk left the pool running `DEGRADED` with zero redundancy (see the [ZFS pool disk fault](docs/troubleshooting.md#7-storage-diagnosing-a-faulted-disk-without-touching-hardware) entry below)
 - Lidarr paused mid-build — resume points tracked in [Media Automation](docs/arr-stack.md#extension-lidarr-music--paused-curated-artist-scope)
 - Re-measurement of the Vietnam↔Germany throughput ceiling outstanding — figures taken during the Immich build are 5–10× higher than the number currently documented, which several decisions depend on
 - Re-test outstanding on whether the arr-stack's per-container `dns:` overrides actually function, given the ISP appears to block port 53 to third-party resolvers
 - Minecraft server runs in offline mode with no whitelist; Tailscale ACLs for shared users not yet set
+
+## 2026 — Second site: Germany node (Proxmox VE)
+- Repository renamed from `homelab-nas` to `self-hosted-homelab` now that it covers two sites
+- Added a Proxmox VE 9.3 node in Darmstadt: a used Dell OptiPlex 5060 Micro (i5-8500T, 16 GB), bought for €132.69 against a requirement list of ≤ 25 W idle, under €300 and 8th gen+. Rack and TL-SG108E managed switch ordered, assembly pending
+- Validated before installing anything: CrystalDiskInfo Good with 3,958 GB written and 0 reallocated/uncorrectable/CRC errors, two alarming-looking values explained as Micron/counter quirks, and one MemTest86+ pass with 0 errors (one stick came from a spare-parts box with no anti-static protection)
+- Chose ext4/LVM-thin over ZFS on the single SSD; ZFS replication from the NAS will go to a dedicated backup disk later
+- First update failed against the default enterprise repository; switched to `pve-no-subscription`, also disabled the unused Ceph enterprise repo, then reboot-verified without the installer USB
+- Fixed IP set in Proxmox and reserved in the router by MAC; LAN ranges confirmed non-overlapping between sites
+- Tailscale on the host with `tag:server` and key expiry disabled. **Found the NAS's own key two months from expiry despite its tag**, and fixed it
+- TOTP 2FA and recovery keys on `root@pam`, tested in a private window; remote access verified over 5G
+- Measured the Vodafone→VNPT route at **0 % loss over 100 pings** (~275 ms typical, direct after a brief Singapore-relay start), compared with 6–10 % on Telekom and O2. One sample; re-test pending
 
 ## 2026 — Game server: Minecraft ("Cozy Valley")
 - Hosted a modded Minecraft server for friends in Germany, Belgium, Finland and Vietnam — Tailscale node sharing only, no port forwarding; Palworld rejected first on hardware grounds (4-core / 16 GB+ minimum)

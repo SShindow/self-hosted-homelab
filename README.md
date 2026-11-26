@@ -1,6 +1,13 @@
-# Home NAS with Secure Remote Access (TrueNAS + Tailscale)
+# Self-Hosted Homelab: Vietnam NAS + Germany Proxmox Node
 
-A self-hosted Network Attached Storage system built from repurposed desktop hardware, providing secure, cross-platform remote file access from anywhere in the world.
+A two-site self-hosted homelab. A **TrueNAS NAS in Vietnam**, built from repurposed desktop hardware, provides storage, media and photos. A **Proxmox VE node in Germany** runs local apps and monitoring. **Tailscale** links both sites with no port forwarding.
+
+| Site | Hardware | Role |
+|---|---|---|
+| 🇻🇳 Vietnam (family home) | Repurposed desktop, TrueNAS CE, ZFS mirror | Storage, media, photos, game server |
+| 🇩🇪 Germany (Darmstadt) | Dell OptiPlex 5060 Micro, Proxmox VE | Apps and VMs, smart home, monitoring, backup target. See [Germany Node](docs/germany-node-proxmox.md) |
+
+*The architecture diagram, overview and hardware sections below describe the Vietnam NAS, which this project started as.*
 
 ![Architecture Diagram](docs/architecture.svg)
 
@@ -88,6 +95,7 @@ Each module is a self-contained build with its own goals, decisions, problems hi
 | **[Dashboard (Homepage)](docs/homepage.md)** | One YAML-configured page reaching every service on the box, with live widgets, working identically from the LAN or from Germany. | ✅ Operational |
 | **[Photo Management](docs/photos-immich.md)** | Immich replacing a paid 50 GB cloud photo tier — mobile auto-backup, a library that stays readable without the app, and a checksum-verified off-site copy. | ✅ Operational |
 | **[Game Server (Minecraft)](docs/game-server-minecraft.md)** | A modded Forge 1.20.1 server for friends in four countries, sized to a 2-core CPU without AVX — three builds, a memory rebalance, and an ISP-route finding to get there. | ✅ Operational |
+| **[Germany Node (Proxmox VE)](docs/germany-node-proxmox.md)** | A second site: a used OptiPlex Micro validated (SMART, MemTest), running Proxmox VE on the same tailnet, with tagged non-expiring keys, 2FA, and a measured 0 % loss Vodafone→VNPT route. | ✅ Operational (rack assembly pending) |
 
 **[Troubleshooting Playbook](docs/troubleshooting.md)** — recurring problem patterns collected across every module above (container networking, ISP DNS interference, storage diagnostics, and more), grouped by root cause rather than by which module happened to surface each one first.
 
@@ -145,6 +153,8 @@ Each module is a self-contained build with its own goals, decisions, problems hi
 - The home LAN is reachable from abroad via a Tailscale subnet router — the router's own admin page included — without exposing anything to the internet, confirmed from a real Germany connection (not just a same-country stand-in).
 - A modded Minecraft server (Forge 1.20.1, 35 mods) hosts friends in four countries over Tailscale only — five players tested across two launcher types, all four dimensions pre-generated, idling at a 3.6 ms tick on a 2-core CPU (see [Game Server](docs/game-server-minecraft.md)).
 
+- A second site in Germany runs Proxmox VE on a used €133 mini PC, validated before use (SMART, a MemTest pass), reachable from anywhere over Tailscale behind TOTP 2FA, and measured at **0 % packet loss to the NAS over Vodafone** where Telekom and O2 lost 6–10 % (see [Germany Node](docs/germany-node-proxmox.md)).
+
 ## Lessons Learned
 
 - Mesh VPNs like Tailscale remove almost all the traditional networking pain (port forwarding, dynamic DNS, firewall rules) from remote NAS access.
@@ -180,6 +190,8 @@ Each module is a self-contained build with its own goals, decisions, problems hi
 - A process completing "with 0 errors" answers a narrower question than it sounds like. A ZFS resilver reporting zero errors only proves the blocks it touched were fine; a full scrub afterward found new checksum errors on the same disk that the resilver's clean result had nothing to say about.
 - Check the CPU's instruction set before trusting a container's `latest` tag. A 10-year-old CPU without AVX turned a current Java runtime into an instant `SIGILL`; `/proc/cpuinfo` answered in one line what three JVM flags couldn't.
 - "It only breaks for one person" is a routing clue before it's a server clue. The same Germany→Vietnam disconnect reproduced on two consumer carriers and vanished through a data center in the same city — distance was never the variable, transit was.
+
+- A security default is worth one click to verify. The NAS carried `tag:server` and was still two months from key expiry. Nothing would have shown that until it dropped off the tailnet with nobody on site.
 
 ## Future Improvements
 
@@ -230,8 +242,12 @@ Each module is a self-contained build with its own goals, decisions, problems hi
 - [ ] Minecraft: whitelist or login mod (offline mode currently lets anyone on the share join as anyone)
 - [ ] Tailscale ACLs limiting shared users to the ports they need (currently every port on the NAS)
 - [ ] Cap qBittorrent's memory (~1 GB `mem_limit`) so seeding can't squeeze other services
-- [ ] Permanent fix for the lossy German-ISP→VNPT route (data-center relay/exit VPS) instead of a client-side VPN
+- [ ] Permanent fix for the lossy German-ISP→VNPT route (data-center relay/exit VPS) instead of a client-side VPN. Vodafone measured 0 % loss on the first test, so this may not be needed; re-test first
+- [x] ~~Second site in Germany~~ → done, see [Germany Node (Proxmox VE)](docs/germany-node-proxmox.md)
+- [ ] Germany node: assemble the 10" rack and replace the unmanaged switch with the TL-SG108E
+- [ ] Germany node: Uptime Kuma watching the NAS from outside, Home Assistant migrated off the desktop's Hyper-V, cross-site backups to a 2.5" SSD
+- [ ] Extend the architecture diagram to both sites
 
 ---
 
-**Stack:** TrueNAS CE · ZFS · Tailscale (WireGuard mesh + exit node + subnet router) · SMB/Samba · rclone (Cloud Sync) · Prometheus + Grafana + node_exporter · Jellyfin · Immich (PostgreSQL + Redis) · Prowlarr · Sonarr · Radarr · Lidarr · Bazarr · a download client · Seerr · Wizarr · Cleanuparr · Homepage · Minecraft (Forge, itzg/minecraft-server)
+**Stack:** TrueNAS CE · Proxmox VE · ZFS · Tailscale (WireGuard mesh + exit node + subnet router) · SMB/Samba · rclone (Cloud Sync) · Prometheus + Grafana + node_exporter · Jellyfin · Immich (PostgreSQL + Redis) · Prowlarr · Sonarr · Radarr · Lidarr · Bazarr · a download client · Seerr · Wizarr · Cleanuparr · Homepage · Minecraft (Forge, itzg/minecraft-server)

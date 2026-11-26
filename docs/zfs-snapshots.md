@@ -1,6 +1,6 @@
 # ZFS Snapshot Strategy
 
-*Part of the [homelab-nas](../README.md) project.*
+*Part of the [self-hosted-homelab](../README.md) project.*
 
 ---
 
